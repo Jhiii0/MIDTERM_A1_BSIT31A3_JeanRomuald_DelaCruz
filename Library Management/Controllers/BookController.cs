@@ -1,5 +1,6 @@
 ﻿using Library_Management.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace Library_Management.Controllers
 {
@@ -16,13 +17,25 @@ namespace Library_Management.Controllers
             return View();
         }
 
-     
+        [HttpPost]
+        public IActionResult Add(AddBookViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            BookService.Instance.AddBook(model);
+            return RedirectToAction(nameof(Index));
+        }
+
+
         public IActionResult EditModal(Guid id)
         {
             var editBookViewModel = BookService.Instance.GetBookById(id);
             if (editBookViewModel == null) return NotFound();
 
-          
+
             return PartialView("_EditBookPartial", editBookViewModel);
         }
 
@@ -43,11 +56,14 @@ namespace Library_Management.Controllers
 
         public IActionResult DeleteModal(Guid id)
         {
-            
-            return PartialView("_DeletePartial");
+            var book = BookService.Instance.GetBooks().FirstOrDefault(b => b.BookId == id);
+            if (book == null) return NotFound();
+
+            return PartialView("_DeleteBookPartial", book);
         }
 
         [HttpDelete]
+        [Route("Book/Delete/{id:guid}")]
         public IActionResult Delete(Guid id)
         {
             // Assuming BookService has a method to delete the book
