@@ -250,9 +250,16 @@ public class BookService
         _bookCopies.Add(newBookItem);
     }
 
-    public IEnumerable<BookListViewModel> GetBooks()
+    public IEnumerable<BookListViewModel> GetBooks(bool includeArchived = false)
     {
-        return _books.Select(b => new BookListViewModel
+        var query = _books.AsEnumerable();
+        
+        if (!includeArchived)
+        {
+            query = query.Where(b => !b.IsArchived);
+        }
+
+        return query.Select(b => new BookListViewModel
         {
             BookId = b.Id,
             Title = b.Title,
@@ -354,6 +361,40 @@ public class BookService
         {
             _bookCopies.Remove(bookCopy);
         }
+    }
+
+    public void ArchiveBook(Guid id)
+    {
+        var book = _books.FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException("Book not found");
+        book.IsArchived = true;
+    }
+
+    public void RestoreBook(Guid id)
+    {
+        var book = _books.FirstOrDefault(b => b.Id == id) ?? throw new KeyNotFoundException("Book not found");
+        book.IsArchived = false;
+    }
+
+    public IEnumerable<BookListViewModel> GetArchivedBooks()
+    {
+        return GetBooks(true).Where(b => _books.First(book => book.Id == b.BookId).IsArchived);
+    }
+
+    public void PulloutBookCopy(Guid bookCopyId, string reason)
+    {
+        var bookCopy = _bookCopies.FirstOrDefault(bc => bc.Id == bookCopyId) ?? throw new KeyNotFoundException("Book copy not found");
+        bookCopy.PulloutDate = DateTime.Now;
+        bookCopy.PulloutReason = reason;
+    }
+
+    public IEnumerable<BookCopy> GetBookCopies(Guid bookId)
+    {
+        return _bookCopies.Where(bc => bc.Book.Id == bookId);
+    }
+
+    public ICollection<Author> GetAuthors()
+    {
+        return _authors;
     }
 
     // Singleton pattern
