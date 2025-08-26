@@ -1,0 +1,60 @@
+@model Library_Management.Models.AuthorListViewModel
+
+<form id="deleteAuthorForm" data-author-id="@Model.AuthorId">
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>Warning!</strong> This action cannot be undone.
+    </div>
+    
+    <div class="mb-4">
+        <div class="d-flex align-items-center mb-3">
+            @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+            {
+                <img src="@Model.ProfileImageUrl" alt="@Model.Name" class="author-avatar me-3" 
+                     style="width: 60px; height: 60px;"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div class="author-avatar-placeholder me-3" style="width: 60px; height: 60px; font-size: 1.5rem; display: none;">
+                    @if (!string.IsNullOrEmpty(Model.Name))
+                    {
+                        @Model.Name.First()
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="author-avatar-placeholder me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                    @if (!string.IsNullOrEmpty(Model.Name))
+                    {
+                        @Model.Name.First()
+                    }
+                </div>
+            }
+            <div>
+                <h5 class="mb-1">@Model.Name</h5>
+                <small class="text-muted">@Model.TotalBooks book(s) in library</small>
+            </div>
+        </div>
+        
+        <p class="mb-0">
+            Are you sure you want to permanently delete <strong>@Model.Name</strong>?
+        </p>
+        
+        @if (Model.TotalBooks > 0)
+        {
+            <div class="alert alert-danger mt-3" role="alert">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <strong>Important:</strong> This author has @Model.TotalBooks book(s) in the library. 
+                Deleting this author will also remove all associated books and their copies.
+            </div>
+        }
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Delete Permanently
+        </button>
+    </div>
+</form>

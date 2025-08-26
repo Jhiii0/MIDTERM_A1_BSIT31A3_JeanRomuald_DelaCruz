@@ -1,0 +1,278 @@
+@model IEnumerable<Library_Management.Models.AuthorListViewModel>
+@{
+    ViewData["Title"] = "Authors";
+    var isArchiveView = ViewData["Title"]?.ToString() == "Archived Authors";
+}
+
+<div class="library-container">
+    <div class="container-fluid">
+        <div class="library-header">
+            <div class="container">
+                <h1>
+                    <i class="bi bi-people-fill header-icon"></i>
+                    @if (isArchiveView)
+                    {
+                        <span>Archived Authors</span>
+                    }
+                    else
+                    {
+                        <span>Authors</span>
+                    }
+                </h1>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="action-bar">
+                <div class="d-flex gap-3">
+                    @if (!isArchiveView)
+                    {
+                        <a asp-action="Add" class="btn-add-new">
+                            <i class="bi bi-plus-lg"></i> Add New Author
+                        </a>
+                        <a asp-action="Archives" class="btn-view-archives">
+                            <i class="bi bi-archive"></i> View Archives
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-action="Index" class="btn-add-new">
+                            <i class="bi bi-arrow-left"></i> Back to Authors
+                        </a>
+                    }
+                </div>
+            </div>
+
+            @if (Model.Any())
+            {
+                <div class="authors-grid">
+                    @foreach (var author in Model)
+                    {
+                        <div class="author-card">
+                            @if (author.IsArchived)
+                            {
+                                <div class="archived-indicator">
+                                    <i class="bi bi-archive"></i> Archived
+                                </div>
+                            }
+                            
+                            <div class="author-card-header">
+                                @if (!string.IsNullOrEmpty(author.ProfileImageUrl))
+                                {
+                                    <img src="@author.ProfileImageUrl" alt="@author.Name" class="author-avatar" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                    <div class="author-avatar-placeholder" style="display: none;">
+                                        @if (!string.IsNullOrEmpty(author.Name))
+                                        {
+                                            @author.Name.First()
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="author-avatar-placeholder">
+                                        @if (!string.IsNullOrEmpty(author.Name))
+                                        {
+                                            @author.Name.First()
+                                        }
+                                    </div>
+                                }
+                                
+                                <h5 class="author-name">@author.Name</h5>
+                                <div class="author-books-count">
+                                    <i class="bi bi-book"></i>
+                                    @author.TotalBooks book(s)
+                                </div>
+                            </div>
+
+                            <div class="author-card-body">
+                                @if (!string.IsNullOrEmpty(author.Biography))
+                                {
+                                    <p class="author-bio">@author.Biography</p>
+                                }
+                                
+                                @if (author.BirthDate.HasValue)
+                                {
+                                    <div class="author-birth-date">
+                                        <i class="bi bi-calendar"></i>
+                                        Born: @author.BirthDate.Value.ToString("MMMM dd, yyyy")
+                                    </div>
+                                }
+
+                                <div class="card-actions">
+                                    <a asp-action="Details" asp-route-id="@author.AuthorId" class="btn btn-sm btn-details">
+                                        <i class="bi bi-eye"></i> Details
+                                    </a>
+                                    
+                                    @if (!author.IsArchived)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-edit" onclick="editAuthor('@author.AuthorId')">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-archive" onclick="archiveAuthor('@author.AuthorId', '@author.Name')">
+                                            <i class="bi bi-archive"></i> Archive
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-delete" onclick="deleteAuthor('@author.AuthorId', '@author.Name')">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-restore" onclick="restoreAuthor('@author.AuthorId', '@author.Name')">
+                                            <i class="bi bi-arrow-clockwise"></i> Restore
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h4>
+                        @if (isArchiveView)
+                        {
+                            <span>No Archived Authors</span>
+                        }
+                        else
+                        {
+                            <span>No Authors Found</span>
+                        }
+                    </h4>
+                    <p>
+                        @if (isArchiveView)
+                        {
+                            <span>There are no archived authors at the moment.</span>
+                        }
+                        else
+                        {
+                            <span>Start building your library by adding your first author.</span>
+                        }
+                    </p>
+                    @if (!isArchiveView)
+                    {
+                        <a asp-action="Add" class="btn-add-new mt-3">
+                            <i class="bi bi-plus-lg"></i> Add Your First Author
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Edit Author Modal -->
+<div class="modal fade" id="editAuthorModal" tabindex="-1" aria-labelledby="editAuthorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAuthorModalLabel">
+                    <i class="bi bi-pencil-square"></i> Edit Author
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="editAuthorModalBody">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteAuthorModal" tabindex="-1" aria-labelledby="deleteAuthorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAuthorModalLabel">
+                    <i class="bi bi-trash"></i> Delete Author
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="deleteAuthorModalBody">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editAuthor(authorId) {
+            $.get('/Author/EditModal/' + authorId, function (data) {
+                $('#editAuthorModalBody').html(data);
+                $('#editAuthorModal').modal('show');
+            });
+        }
+
+        function deleteAuthor(authorId, authorName) {
+            $.get('/Author/DeleteModal/' + authorId, function (data) {
+                $('#deleteAuthorModalBody').html(data);
+                $('#deleteAuthorModal').modal('show');
+            });
+        }
+
+        function archiveAuthor(authorId, authorName) {
+            if (confirm(`Are you sure you want to archive "${authorName}"? This will also archive all books by this author.`)) {
+                $.post('/Author/Archive', { id: authorId })
+                    .done(function () {
+                        location.reload();
+                    })
+                    .fail(function () {
+                        alert('Error archiving author. Please try again.');
+                    });
+            }
+        }
+
+        function restoreAuthor(authorId, authorName) {
+            if (confirm(`Are you sure you want to restore "${authorName}"?`)) {
+                $.post('/Author/Restore', { id: authorId })
+                    .done(function () {
+                        location.reload();
+                    })
+                    .fail(function () {
+                        alert('Error restoring author. Please try again.');
+                    });
+            }
+        }
+
+        // Handle edit form submission
+        $(document).on('submit', '#editAuthorForm', function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            
+            $.post('/Author/Edit', formData)
+                .done(function () {
+                    $('#editAuthorModal').modal('hide');
+                    location.reload();
+                })
+                .fail(function (xhr) {
+                    var errors = xhr.responseJSON;
+                    // Handle validation errors if needed
+                    console.log('Validation errors:', errors);
+                });
+        });
+
+        // Handle delete form submission
+        $(document).on('submit', '#deleteAuthorForm', function (e) {
+            e.preventDefault();
+            var authorId = $(this).data('author-id');
+            
+            $.ajax({
+                url: '/Author/Delete/' + authorId,
+                type: 'DELETE',
+                success: function () {
+                    $('#deleteAuthorModal').modal('hide');
+                    location.reload();
+                },
+                error: function () {
+                    alert('Error deleting author. Please try again.');
+                }
+            });
+        });
+    </script>
+}

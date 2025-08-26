@@ -272,7 +272,8 @@ public class BookService
             AuthorName = _authors.FirstOrDefault(a => a.Books.Any(bk => bk.Id == b.Id))?.Name,
             AuthorProfileImageUrl = _authors.FirstOrDefault(a => a.Books.Any(bk => bk.Id == b.Id))?.ProfileImageUrl,
             TotalCopies = _bookCopies.Count(bi => bi.Book.Id == b.Id),
-            AvailableCopies = _bookCopies.Count(bi => bi.Book.Id == b.Id && bi.PulloutDate == null)
+            AvailableCopies = _bookCopies.Count(bi => bi.Book.Id == b.Id && bi.PulloutDate == null),
+            IsArchived = b.IsArchived
         });
     }
 

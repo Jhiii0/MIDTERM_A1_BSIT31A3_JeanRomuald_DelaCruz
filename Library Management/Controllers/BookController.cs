@@ -74,9 +74,59 @@ namespace Library_Management.Controllers
         public IActionResult Details(Guid id)
         {
             var book = BookService.Instance.GetBooks().First(b => b.BookId == id);
+            var bookCopies = BookService.Instance.GetBookCopies(id);
+            ViewBag.BookCopies = bookCopies;
             return View(book);
         }
 
+        [HttpPost]
+        public IActionResult PulloutCopy(Guid bookCopyId, string reason)
+        {
+            try
+            {
+                BookService.Instance.PulloutBookCopy(bookCopyId, reason);
+                return Ok();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost]
+        public IActionResult Archive(Guid id)
+        {
+            try
+            {
+                BookService.Instance.ArchiveBook(id);
+                return Ok();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost]
+        public IActionResult Restore(Guid id)
+        {
+            try
+            {
+                BookService.Instance.RestoreBook(id);
+                return Ok();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+        }
+
+        public IActionResult Archives()
+        {
+            var archivedBooks = BookService.Instance.GetArchivedBooks();
+            ViewData["Title"] = "Archived Books";
+            return View("Index", archivedBooks);
+        }
 
     }
 }

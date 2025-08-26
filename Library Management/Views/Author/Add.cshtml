@@ -1,0 +1,161 @@
+@model Library_Management.Models.AddAuthorViewModel
+@{
+    ViewData["Title"] = "Add New Author";
+}
+
+<div class="library-container">
+    <div class="container">
+        <div class="library-header">
+            <h1>
+                <i class="bi bi-person-plus header-icon"></i>
+                Add New Author
+            </h1>
+        </div>
+
+        <div class="form-container">
+            <form asp-action="Add" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Name" class="form-label">
+                                <i class="bi bi-person"></i> @Html.DisplayNameFor(model => model.Name)
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter author's full name" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="BirthDate" class="form-label">
+                                <i class="bi bi-calendar"></i> @Html.DisplayNameFor(model => model.BirthDate)
+                            </label>
+                            <input asp-for="BirthDate" class="form-control" type="date" />
+                            <span asp-validation-for="BirthDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ProfileImageUrl" class="form-label">
+                        <i class="bi bi-image"></i> @Html.DisplayNameFor(model => model.ProfileImageUrl)
+                    </label>
+                    <input asp-for="ProfileImageUrl" class="form-control" placeholder="https://example.com/author-photo.jpg" />
+                    <span asp-validation-for="ProfileImageUrl" class="text-danger"></span>
+                    <small class="form-text text-muted">Optional: URL to author's profile picture</small>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Biography" class="form-label">
+                        <i class="bi bi-journal-text"></i> @Html.DisplayNameFor(model => model.Biography)
+                    </label>
+                    <textarea asp-for="Biography" class="form-control" rows="5" 
+                              placeholder="Write a brief biography about the author..."></textarea>
+                    <span asp-validation-for="Biography" class="text-danger"></span>
+                    <small class="form-text text-muted">Optional: Brief information about the author</small>
+                </div>
+
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Add Author
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview Card (if image URL is provided) -->
+        <div id="authorPreview" class="form-container" style="display: none;">
+            <h5 class="form-title">
+                <i class="bi bi-eye"></i> Preview
+            </h5>
+            <div class="author-card" style="max-width: 400px;">
+                <div class="author-card-header">
+                    <div id="previewAvatar" class="author-avatar-placeholder">
+                        ?
+                    </div>
+                    <h5 id="previewName" class="author-name">Author Name</h5>
+                    <div class="author-books-count">
+                        <i class="bi bi-book"></i>
+                        0 book(s)
+                    </div>
+                </div>
+                <div class="author-card-body">
+                    <p id="previewBio" class="author-bio"></p>
+                    <div id="previewBirthDate" class="author-birth-date">
+                        <i class="bi bi-calendar"></i>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <script>
+        $(document).ready(function() {
+            // Live preview functionality
+            function updatePreview() {
+                var name = $('#Name').val() || 'Author Name';
+                var bio = $('#Biography').val() || '';
+                var imageUrl = $('#ProfileImageUrl').val();
+                var birthDate = $('#BirthDate').val();
+                
+                // Update name
+                $('#previewName').text(name);
+                
+                // Update avatar
+                if (imageUrl) {
+                    $('#previewAvatar').html(`<img src="${imageUrl}" alt="${name}" class="author-avatar" 
+                        onerror="this.style.display='none'; this.parentNode.innerHTML='${name.charAt(0).toUpperCase()}'; this.parentNode.className='author-avatar-placeholder';" />`);
+                } else {
+                    $('#previewAvatar').html(name.charAt(0).toUpperCase());
+                    $('#previewAvatar').attr('class', 'author-avatar-placeholder');
+                }
+                
+                // Update bio
+                if (bio) {
+                    $('#previewBio').text(bio).show();
+                } else {
+                    $('#previewBio').hide();
+                }
+                
+                // Update birth date
+                if (birthDate) {
+                    var date = new Date(birthDate);
+                    var formattedDate = date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    $('#previewBirthDate span').text('Born: ' + formattedDate);
+                    $('#previewBirthDate').show();
+                } else {
+                    $('#previewBirthDate').hide();
+                }
+                
+                // Show/hide preview
+                if (name.trim() && name !== 'Author Name') {
+                    $('#authorPreview').show();
+                } else {
+                    $('#authorPreview').hide();
+                }
+            }
+            
+            // Bind events
+            $('#Name, #Biography, #ProfileImageUrl, #BirthDate').on('input change', updatePreview);
+            
+            // Initial preview update
+            updatePreview();
+        });
+    </script>
+}

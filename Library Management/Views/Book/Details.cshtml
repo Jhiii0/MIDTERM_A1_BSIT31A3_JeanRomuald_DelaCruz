@@ -1,62 +1,316 @@
-﻿@model Library_Management.Models.BookListViewModel
+@model Library_Management.Models.BookListViewModel
+@{
+    ViewData["Title"] = $"{Model.Title} - Book Details";
+    var bookCopies = ViewBag.BookCopies as IEnumerable<Library_Management_Domain.Entities.BookCopy> ?? new List<Library_Management_Domain.Entities.BookCopy>();
+}
 
-<div class="modal-header bg-primary text-white">
-    <h5 class="modal-title">@Model.Title</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-</div>
-
-<div class="modal-body">
-    <div class="row g-4">
-        <!-- Cover Image -->
-        <div class="col-md-4 text-center">
-            <img src="@Model.CoverImageUrl"
-                 class="img-fluid rounded shadow-sm"
-                 alt="@Model.Title"
-                 style="max-height: 300px; object-fit: cover;">
+<div class="library-container">
+    <div class="container">
+        <div class="library-header">
+            <h1>
+                <i class="bi bi-book-half header-icon"></i>
+                Book Details
+            </h1>
         </div>
 
-        <!-- Details -->
-        <div class="col-md-8">
-            <dl class="row mb-0">
-                <dt class="col-sm-4 fw-semibold">@Html.DisplayNameFor(m => m.ISBN)</dt>
-                <dd class="col-sm-8">@Model.ISBN</dd>
+        <div class="row">
+            <!-- Book Information -->
+            <div class="col-lg-4">
+                <div class="form-container">
+                    <div class="text-center mb-4">
+                        @if (!string.IsNullOrEmpty(Model.CoverImageUrl))
+                        {
+                            <img src="@Model.CoverImageUrl" alt="@Model.Title" class="img-fluid rounded shadow-sm mb-3" 
+                                 style="max-height: 300px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center bg-light rounded mb-3" 
+                                 style="height: 300px; font-size: 4rem; color: #6c757d;">
+                                <i class="bi bi-book"></i>
+                            </div>
+                        }
+                        
+                        <h2 class="author-name">@Model.Title</h2>
+                        <p class="text-muted mb-0">@Model.Genre</p>
+                    </div>
 
-                <dt class="col-sm-4 fw-semibold">@Html.DisplayNameFor(m => m.AuthorName)</dt>
-                <dd class="col-sm-8 d-flex align-items-center">
-                    @Model.AuthorName
-                    @if (!string.IsNullOrEmpty(Model.AuthorProfileImageUrl))
+                    <dl class="row">
+                        <dt class="col-sm-4">ISBN:</dt>
+                        <dd class="col-sm-8">@Model.ISBN</dd>
+
+                        <dt class="col-sm-4">Author:</dt>
+                        <dd class="col-sm-8">
+                            <div class="d-flex align-items-center">
+                                @if (!string.IsNullOrEmpty(Model.AuthorProfileImageUrl))
+                                {
+                                    <img src="@Model.AuthorProfileImageUrl" class="rounded-circle me-2" 
+                                         style="width: 30px; height: 30px; object-fit: cover;" alt="Author Profile" />
+                                }
+                                <span>@Model.AuthorName</span>
+                            </div>
+                        </dd>
+
+                        @if (Model.PublishedDate.HasValue)
+                        {
+                            <dt class="col-sm-4">Published:</dt>
+                            <dd class="col-sm-8">@Model.PublishedDate.Value.ToString("MMMM yyyy")</dd>
+                        }
+
+                        <dt class="col-sm-4">Copies:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-success">@Model.AvailableCopies Available</span>
+                            <span class="badge bg-secondary">@Model.TotalCopies Total</span>
+                        </dd>
+                    </dl>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
                     {
-                        <img src="@Model.AuthorProfileImageUrl"
-                             class="rounded-circle ms-2"
-                             style="width: 30px; height: 30px; object-fit: cover;"
-                             alt="Author Profile">
+                        <div class="mt-4">
+                            <h6 class="form-title">
+                                <i class="bi bi-journal-text"></i> Description
+                            </h6>
+                            <p class="text-muted">@Model.Description</p>
+                        </div>
                     }
-                </dd>
 
-                <dt class="col-sm-4 fw-semibold">@Html.DisplayNameFor(m => m.Genre)</dt>
-                <dd class="col-sm-8">@Model.Genre</dd>
+                    <div class="d-flex gap-2 flex-wrap mt-4">
+                        <button type="button" class="btn btn-sm btn-edit" onclick="editBook('@Model.BookId')">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-sm btn-delete" onclick="deleteBook('@Model.BookId', '@Model.Title')">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                        <a asp-action="Index" class="btn btn-sm btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Books
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-                <dt class="col-sm-4 fw-semibold">@Html.DisplayNameFor(m => m.PublishedDate)</dt>
-                <dd class="col-sm-8">@Model.PublishedDate?.ToString("yyyy-MM-dd")</dd>
+            <!-- Book Copies -->
+            <div class="col-lg-8">
+                <div class="form-container">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="form-title mb-0">
+                            <i class="bi bi-stack"></i> Book Copies (@bookCopies.Count())
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-add-new" data-bs-toggle="modal" data-bs-target="#addCopyModal">
+                            <i class="bi bi-plus-lg"></i> Add Copy
+                        </button>
+                    </div>
 
-                <dt class="col-sm-4 fw-semibold">Available Copies</dt>
-                <dd class="col-sm-8">@Model.AvailableCopies / @Model.TotalCopies</dd>
-            </dl>
-
-            <hr />
-
-            <h6 class="fw-semibold">@Html.DisplayNameFor(m => m.Description)</h6>
-            <p class="mb-0">@Model.Description</p>
+                    @if (bookCopies.Any())
+                    {
+                        <div class="row">
+                            @foreach (var copy in bookCopies)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="book-copy-card @(copy.PulloutDate.HasValue ? "book-copy-pulled" : "")">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="mb-1">Copy @(bookCopies.ToList().IndexOf(copy) + 1)</h6>
+                                                @if (copy.PulloutDate.HasValue)
+                                                {
+                                                    <span class="pullout-status">
+                                                        <i class="bi bi-exclamation-triangle"></i> Pulled Out
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="available-status">
+                                                        <i class="bi bi-check-circle"></i> Available
+                                                    </span>
+                                                }
+                                            </div>
+                                            
+                                            <div class="row text-sm">
+                                                <div class="col-6">
+                                                    <strong>Condition:</strong><br>
+                                                    <span class="text-muted">@copy.Condition</span>
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Source:</strong><br>
+                                                    <span class="text-muted">@copy.Source</span>
+                                                </div>
+                                            </div>
+                                            
+                                            @if (copy.AddedDate.HasValue)
+                                            {
+                                                <div class="mt-2">
+                                                    <strong>Added:</strong> <span class="text-muted">@copy.AddedDate.Value.ToString("MMM dd, yyyy")</span>
+                                                </div>
+                                            }
+                                            
+                                            @if (copy.PulloutDate.HasValue)
+                                            {
+                                                <div class="mt-2">
+                                                    <div class="alert alert-danger p-2 mb-2">
+                                                        <strong>Pulled Out:</strong> @copy.PulloutDate.Value.ToString("MMM dd, yyyy")<br>
+                                                        <strong>Reason:</strong> @copy.PulloutReason
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="mt-3">
+                                                    <button type="button" class="btn btn-pullout btn-sm" 
+                                                            onclick="pulloutCopy('@copy.Id', '@Model.Title')">
+                                                        <i class="bi bi-box-arrow-right"></i> Pull Out
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="bi bi-stack"></i>
+                            </div>
+                            <h4>No Copies Found</h4>
+                            <p>This book doesn't have any physical copies in the library yet.</p>
+                            <button type="button" class="btn-add-new mt-3" data-bs-toggle="modal" data-bs-target="#addCopyModal">
+                                <i class="bi bi-plus-lg"></i> Add First Copy
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="modal-footer">
-
-    <a asp-action="Index" asp-route-id="@Model.BookId" class="btn btn-outline-primary">
-        <i class="bi bi-arrow-left"></i> Close
-    </a>
-    <a asp-action="Edit" asp-route-id="@Model.BookId" class="btn btn-primary">
-        <i class="bi bi-pencil-square"></i> Manage Copies
-    </a>
+<!-- Pullout Modal -->
+<div class="modal fade" id="pulloutModal" tabindex="-1" aria-labelledby="pulloutModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pulloutModalLabel">
+                    <i class="bi bi-box-arrow-right"></i> Pull Out Book Copy
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="pulloutModalBody">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        function pulloutCopy(copyId, bookTitle) {
+            var modalBody = $('#pulloutModalBody');
+            var formHtml = `
+                <form id="pulloutForm" data-copy-id="${copyId}">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        This will remove the book copy from available circulation.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Book: ${bookTitle}</h6>
+                        <small class="text-muted">Copy ID: ${copyId}</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="pulloutReason" class="form-label">
+                            <i class="bi bi-chat-text"></i> Reason for Pull-out <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="pulloutReason" name="pulloutReason" required>
+                            <option value="">Select a reason...</option>
+                            <option value="Damaged">Damaged</option>
+                            <option value="Lost">Lost</option>
+                            <option value="Outdated">Outdated</option>
+                            <option value="Missing Pages">Missing Pages</option>
+                            <option value="Poor Condition">Poor Condition</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="customReasonDiv" style="display: none;">
+                        <label for="customReason" class="form-label">Custom Reason</label>
+                        <input type="text" class="form-control" id="customReason" name="customReason" 
+                               placeholder="Please specify the reason...">
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-box-arrow-right"></i> Pull Out Copy
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            modalBody.html(formHtml);
+            $('#pulloutModal').modal('show');
+            
+            // Handle custom reason toggle
+            $('#pulloutReason').on('change', function() {
+                if ($(this).val() === 'Other') {
+                    $('#customReasonDiv').show();
+                    $('#customReason').prop('required', true);
+                } else {
+                    $('#customReasonDiv').hide();
+                    $('#customReason').prop('required', false);
+                }
+            });
+        }
+        
+        // Handle pullout form submission
+        $(document).on('submit', '#pulloutForm', function (e) {
+            e.preventDefault();
+            var copyId = $(this).data('copy-id');
+            var reason = $('#pulloutReason').val();
+            
+            if (reason === 'Other') {
+                reason = $('#customReason').val();
+            }
+            
+            if (!reason) {
+                alert('Please provide a reason for the pullout.');
+                return;
+            }
+            
+            $.post('/Book/PulloutCopy', { bookCopyId: copyId, reason: reason })
+                .done(function () {
+                    $('#pulloutModal').modal('hide');
+                    location.reload();
+                })
+                .fail(function () {
+                    alert('Error pulling out book copy. Please try again.');
+                });
+        });
+        
+        function editBook(bookId) {
+            $.get('/Book/EditModal/' + bookId, function (data) {
+                // This would open an edit modal for the book
+                console.log('Edit book:', bookId);
+            });
+        }
+        
+        function deleteBook(bookId, bookTitle) {
+            if (confirm(`Are you sure you want to delete "${bookTitle}"?`)) {
+                $.ajax({
+                    url: '/Book/Delete/' + bookId,
+                    type: 'DELETE',
+                    success: function () {
+                        window.location.href = '/Book';
+                    },
+                    error: function () {
+                        alert('Error deleting book. Please try again.');
+                    }
+                });
+            }
+        }
+    </script>
+}

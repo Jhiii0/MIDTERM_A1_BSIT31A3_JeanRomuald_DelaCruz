@@ -1,0 +1,56 @@
+@model Library_Management.Models.EditAuthorViewModel
+
+<form id="editAuthorForm" asp-action="Edit" method="post">
+    <input type="hidden" asp-for="AuthorId" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="Name" class="form-label">
+                    <i class="bi bi-person"></i> @Html.DisplayNameFor(model => model.Name)
+                </label>
+                <input asp-for="Name" class="form-control" placeholder="Enter author's full name" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="BirthDate" class="form-label">
+                    <i class="bi bi-calendar"></i> @Html.DisplayNameFor(model => model.BirthDate)
+                </label>
+                <input asp-for="BirthDate" class="form-control" type="date" />
+                <span asp-validation-for="BirthDate" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ProfileImageUrl" class="form-label">
+            <i class="bi bi-image"></i> @Html.DisplayNameFor(model => model.ProfileImageUrl)
+        </label>
+        <input asp-for="ProfileImageUrl" class="form-control" placeholder="https://example.com/author-photo.jpg" />
+        <span asp-validation-for="ProfileImageUrl" class="text-danger"></span>
+        <small class="form-text text-muted">Optional: URL to author's profile picture</small>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Biography" class="form-label">
+            <i class="bi bi-journal-text"></i> @Html.DisplayNameFor(model => model.Biography)
+        </label>
+        <textarea asp-for="Biography" class="form-control" rows="4" 
+                  placeholder="Write a brief biography about the author..."></textarea>
+        <span asp-validation-for="Biography" class="text-danger"></span>
+        <small class="form-text text-muted">Optional: Brief information about the author</small>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg"></i> Update Author
+        </button>
+    </div>
+</form>
